@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import FlappyHeart from './FlappyHeart';
 import ScratchCard from './ScratchCard';
+import { CatchHearts, LoveMaze, MemoryMatch, RightHeart, LoveQuiz, DateWheel } from './ExtraGames';
 
 const activities = [
   { id: 'dinner', label: 'Dinner Date', icon: '🍝' },
@@ -46,13 +47,7 @@ function Shell({ children }) {
       <div className="cloud cloud-b" />
       <div className="cloud cloud-c" />
       {hearts.map((heart, i) => (
-        <span
-          key={i}
-          className="floating-heart"
-          style={{ left: heart.left, top: heart.top, animationDelay: heart.delay, fontSize: heart.size }}
-        >
-          ♡
-        </span>
+        <span key={i} className="floating-heart" style={{ left: heart.left, top: heart.top, animationDelay: heart.delay, fontSize: heart.size }}>♡</span>
       ))}
       <div className="sparkle sparkle-a">✦</div>
       <div className="sparkle sparkle-b">✧</div>
@@ -65,10 +60,17 @@ function Shell({ children }) {
 }
 
 function Button({ children, variant = 'primary', className = '', ...props }) {
+  return <button className={`pixel-button ${variant} ${className}`} {...props}><span>{children}</span></button>;
+}
+
+function QuestPanel({ number, title, subtitle, children }) {
   return (
-    <button className={`pixel-button ${variant} ${className}`} {...props}>
-      <span>{children}</span>
-    </button>
+    <div className="panel wide game-panel step-enter">
+      <p className="eyebrow">love quest · game {number} of 8</p>
+      <h1 className="medium">{title}</h1>
+      {subtitle && <p className="subtitle">{subtitle}</p>}
+      {children}
+    </div>
   );
 }
 
@@ -78,176 +80,82 @@ export default function Home() {
   const [noPosition, setNoPosition] = useState({ x: 0, y: 0 });
   const [date, setDate] = useState('');
   const [activity, setActivity] = useState('');
+  const [wheelSuggestion, setWheelSuggestion] = useState('');
   const [showLetter, setShowLetter] = useState(false);
 
-  const chosenActivity = useMemo(
-    () => activities.find((item) => item.id === activity),
-    [activity]
-  );
-
-  const formattedDate = useMemo(() => {
-    if (!date) return '';
-    return new Intl.DateTimeFormat('en', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).format(new Date(`${date}T12:00:00`));
-  }, [date]);
+  const chosenActivity = useMemo(() => activities.find((item) => item.id === activity), [activity]);
+  const formattedDate = useMemo(() => date ? new Intl.DateTimeFormat('en', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${date}T12:00:00`)) : '', [date]);
 
   const dodgeNo = () => {
     const rangeX = typeof window !== 'undefined' && window.innerWidth < 600 ? 115 : 175;
     const rangeY = 86;
-    const x = Math.round((Math.random() * 2 - 1) * rangeX);
-    const y = Math.round((Math.random() * 2 - 1) * rangeY);
-    setNoPosition({ x, y });
+    setNoPosition({ x: Math.round((Math.random() * 2 - 1) * rangeX), y: Math.round((Math.random() * 2 - 1) * rangeY) });
     setNoCount((value) => value + 1);
   };
 
   const reset = () => {
-    setStep('ask');
-    setNoCount(0);
-    setNoPosition({ x: 0, y: 0 });
-    setDate('');
-    setActivity('');
-    setShowLetter(false);
+    setStep('ask'); setNoCount(0); setNoPosition({ x: 0, y: 0 }); setDate(''); setActivity(''); setWheelSuggestion(''); setShowLetter(false);
   };
 
   return (
     <Shell>
-      {step === 'ask' && (
-        <div className="panel ask-panel step-enter">
-          <div className="picture-frame"><PixelMascot mood="ask" /></div>
-          <p className="eyebrow">a tiny question for jessica</p>
-          <h1>WILL YOU GO<br />OUT WITH ME?</h1>
-          <p className="subtitle">Choose carefully... there is definitely a correct answer.</p>
-          <div className="choice-zone">
-            <Button
-              className="yes-button"
-              style={{ transform: `scale(${1 + Math.min(noCount, 7) * 0.075})` }}
-              onClick={() => setStep('yay')}
-            >
-              YES! ♥
-            </Button>
-            <Button
-              variant="secondary"
-              className="no-button"
-              onMouseEnter={dodgeNo}
-              onPointerDown={(event) => {
-                event.preventDefault();
-                dodgeNo();
-              }}
-              style={{ transform: `translate(${noPosition.x}px, ${noPosition.y}px)` }}
-            >
-              {noCount > 5 ? 'Still no?' : noCount > 2 ? 'Nice try' : 'No'}
-            </Button>
-          </div>
-          {noCount > 0 && <p className="tiny-note">the “no” button seems a little shy...</p>}
+      {step === 'ask' && <div className="panel ask-panel step-enter">
+        <div className="picture-frame"><PixelMascot mood="ask" /></div>
+        <p className="eyebrow">a tiny question for jessica</p>
+        <h1>WILL YOU GO<br />OUT WITH ME?</h1>
+        <p className="subtitle">Choose carefully... there is definitely a correct answer.</p>
+        <div className="choice-zone">
+          <Button className="yes-button" style={{ transform: `scale(${1 + Math.min(noCount, 7) * 0.075})` }} onClick={() => setStep('yay')}>YES! ♥</Button>
+          <Button variant="secondary" className="no-button" onMouseEnter={dodgeNo} onPointerDown={(event) => { event.preventDefault(); dodgeNo(); }} style={{ transform: `translate(${noPosition.x}px, ${noPosition.y}px)` }}>{noCount > 5 ? 'Still no?' : noCount > 2 ? 'Nice try' : 'No'}</Button>
         </div>
-      )}
+        {noCount > 0 && <p className="tiny-note">the “no” button seems a little shy...</p>}
+      </div>}
 
-      {step === 'yay' && (
-        <div className="panel step-enter">
-          <div className="picture-frame happy"><PixelMascot mood="yay" /></div>
-          <p className="eyebrow">excellent decision</p>
-          <h1 className="huge">YAY!</h1>
-          <p className="subtitle">I knew you had great taste ✨ But your prize has two tiny security checks.</p>
-          <div className="heart-burst" aria-hidden="true">
-            <span>♥</span><span>♡</span><span>♥</span><span>♡</span><span>♥</span>
-          </div>
-          <Button onClick={() => setStep('flappy')}>START MINI GAME →</Button>
-        </div>
-      )}
+      {step === 'yay' && <div className="panel step-enter">
+        <div className="picture-frame happy"><PixelMascot mood="yay" /></div>
+        <p className="eyebrow">excellent decision</p>
+        <h1 className="huge">YAY!</h1>
+        <p className="subtitle">Before you claim the date, there is one extremely serious eight-level compatibility test 😂</p>
+        <div className="heart-burst" aria-hidden="true"><span>♥</span><span>♡</span><span>♥</span><span>♡</span><span>♥</span></div>
+        <Button onClick={() => setStep('catch')}>START LOVE QUEST →</Button>
+      </div>}
 
-      {step === 'flappy' && (
-        <div className="panel wide game-panel step-enter">
-          <p className="eyebrow">bonus game 1 of 2</p>
-          <h1 className="medium">FLAPPY HEART</h1>
-          <p className="subtitle">Deliver this tiny heart safely. Seven gates only — I promise I&apos;m not evil.</p>
-          <FlappyHeart onWin={() => setStep('scratch')} />
-        </div>
-      )}
+      {step === 'catch' && <QuestPanel number="1" title="CATCH THE HEARTS" subtitle="Catch six runaway hearts before they escape."><CatchHearts onWin={() => setStep('maze')} /></QuestPanel>}
+      {step === 'maze' && <QuestPanel number="2" title="LOVE MAZE" subtitle="Guide the heart through the tiny maze to the ribbon."><LoveMaze onWin={() => setStep('memory')} /></QuestPanel>}
+      {step === 'memory' && <QuestPanel number="3" title="MEMORY MATCH" subtitle="Match all four pairs. Very scientific compatibility research."><MemoryMatch onWin={() => setStep('rightheart')} /></QuestPanel>}
+      {step === 'rightheart' && <QuestPanel number="4" title="FIND MY HEART" subtitle="Pick the correct heart. Wrong answers may cause suspicious movement."><RightHeart onWin={() => setStep('flappy')} /></QuestPanel>}
+      {step === 'flappy' && <QuestPanel number="5" title="FLAPPY HEART" subtitle="Deliver this tiny heart safely through seven gates."><FlappyHeart onWin={() => setStep('quiz')} /></QuestPanel>}
+      {step === 'quiz' && <QuestPanel number="6" title="LOVE QUIZ" subtitle="Three impossible questions with absolutely unbiased scoring."><LoveQuiz onWin={() => setStep('scratch')} /></QuestPanel>}
+      {step === 'scratch' && <QuestPanel number="7" title="SECRET PRIZE" subtitle="Scratch the card to reveal what you actually won."><ScratchCard onComplete={() => setStep('wheel')} /></QuestPanel>}
+      {step === 'wheel' && <QuestPanel number="8" title="DATE WHEEL" subtitle="One last spin. Let destiny make a completely optional suggestion."><DateWheel onWin={(result) => { setWheelSuggestion(result); setStep('date'); }} /></QuestPanel>}
 
-      {step === 'scratch' && (
-        <div className="panel wide game-panel step-enter">
-          <p className="eyebrow">bonus game 2 of 2</p>
-          <h1 className="medium">SECRET PRIZE</h1>
-          <p className="subtitle">You survived the heart delivery. Now scratch the card to see what you actually won.</p>
-          <ScratchCard onComplete={() => setStep('date')} />
-        </div>
-      )}
+      {step === 'date' && <div className="panel step-enter">
+        <div className="picture-frame small"><PixelMascot mood="ask" /></div>
+        <p className="eyebrow">quest complete · date setup 1 of 2</p>
+        <h1 className="medium">PICK A DATE</h1>
+        {wheelSuggestion && <p className="wheel-suggestion">The wheel suggested: <strong>{wheelSuggestion}</strong> ✨</p>}
+        <p className="subtitle">When should our tiny adventure happen?</p>
+        <label className="date-box"><span>DATE</span><input type="date" value={date} min={new Date().toISOString().slice(0, 10)} onChange={(event) => setDate(event.target.value)} /></label>
+        <Button disabled={!date} onClick={() => setStep('activity')}>CONTINUE →</Button>
+      </div>}
 
-      {step === 'date' && (
-        <div className="panel step-enter">
-          <div className="picture-frame small"><PixelMascot mood="ask" /></div>
-          <p className="eyebrow">date setup · step 1 of 2</p>
-          <h1 className="medium">PICK A DATE</h1>
-          <p className="subtitle">When should our tiny adventure happen?</p>
-          <label className="date-box">
-            <span>DATE</span>
-            <input
-              type="date"
-              value={date}
-              min={new Date().toISOString().slice(0, 10)}
-              onChange={(event) => setDate(event.target.value)}
-            />
-          </label>
-          <Button disabled={!date} onClick={() => setStep('activity')}>CONTINUE →</Button>
-        </div>
-      )}
+      {step === 'activity' && <div className="panel wide step-enter">
+        <div className="picture-frame small"><PixelMascot mood="ask" /></div>
+        <p className="eyebrow">date setup · step 2 of 2</p>
+        <h1 className="medium">WHAT WOULD YOU LIKE TO DO?</h1>
+        <div className="activity-grid">{activities.map((item) => <button key={item.id} className={`activity-card ${activity === item.id ? 'selected' : ''}`} onClick={() => setActivity(item.id)}><span className="activity-icon">{item.icon}</span><span>{item.label}</span></button>)}</div>
+        <Button disabled={!activity} onClick={() => setStep('final')}>LOCK IT IN ♥</Button>
+      </div>}
 
-      {step === 'activity' && (
-        <div className="panel wide step-enter">
-          <div className="picture-frame small"><PixelMascot mood="ask" /></div>
-          <p className="eyebrow">date setup · step 2 of 2</p>
-          <h1 className="medium">WHAT WOULD YOU LIKE TO DO?</h1>
-          <div className="activity-grid">
-            {activities.map((item) => (
-              <button
-                key={item.id}
-                className={`activity-card ${activity === item.id ? 'selected' : ''}`}
-                onClick={() => setActivity(item.id)}
-              >
-                <span className="activity-icon">{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </div>
-          <Button disabled={!activity} onClick={() => setStep('final')}>LOCK IT IN ♥</Button>
-        </div>
-      )}
+      {step === 'final' && <div className="panel step-enter">
+        <div className="picture-frame happy"><PixelMascot mood="final" /></div>
+        <p className="eyebrow">mission accomplished</p>
+        <h1 className="medium">IT&apos;S A DATE!</h1>
+        <div className="ticket"><div><span>WHEN</span><strong>{formattedDate}</strong></div><div><span>PLAN</span><strong>{chosenActivity?.icon} {chosenActivity?.label}</strong></div></div>
+        <div className="final-actions"><Button onClick={() => setShowLetter(true)}>OPEN NOTE 💌</Button><button className="text-button" onClick={reset}>start over</button></div>
+      </div>}
 
-      {step === 'final' && (
-        <div className="panel step-enter">
-          <div className="picture-frame happy"><PixelMascot mood="final" /></div>
-          <p className="eyebrow">mission accomplished</p>
-          <h1 className="medium">IT&apos;S A DATE!</h1>
-          <div className="ticket">
-            <div><span>WHEN</span><strong>{formattedDate}</strong></div>
-            <div><span>PLAN</span><strong>{chosenActivity?.icon} {chosenActivity?.label}</strong></div>
-          </div>
-          <div className="final-actions">
-            <Button onClick={() => setShowLetter(true)}>OPEN NOTE 💌</Button>
-            <button className="text-button" onClick={reset}>start over</button>
-          </div>
-        </div>
-      )}
-
-      {showLetter && (
-        <div className="modal-backdrop" onClick={() => setShowLetter(false)}>
-          <div className="letter step-enter" onClick={(event) => event.stopPropagation()}>
-            <button className="close" onClick={() => setShowLetter(false)} aria-label="Close">×</button>
-            <p className="letter-kicker">to: jessica ♡</p>
-            <h2>Okay, you said yes.</h2>
-            <p>
-              This started as a silly little website, but I hope it made you smile.
-              I&apos;m looking forward to spending time with you — no escaping button required.
-            </p>
-            <p>See you on our date. 🌷</p>
-            <p className="signature">— your favorite IT guy (hopefully)</p>
-          </div>
-        </div>
-      )}
+      {showLetter && <div className="modal-backdrop" onClick={() => setShowLetter(false)}><div className="letter step-enter" onClick={(event) => event.stopPropagation()}><button className="close" onClick={() => setShowLetter(false)} aria-label="Close">×</button><p className="letter-kicker">to: jessica ♡</p><h2>Okay, you said yes.</h2><p>This started as a silly little website, but I hope it made you smile. I&apos;m looking forward to spending time with you — no escaping button required.</p><p>See you on our date. 🌷</p><p className="signature">— your favorite IT guy (hopefully)</p></div></div>}
 
       <footer>made with questionable amounts of pink &amp; code</footer>
     </Shell>
