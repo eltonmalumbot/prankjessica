@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import FlappyHeart from './FlappyHeart';
+import ScratchCard from './ScratchCard';
 
 const activities = [
   { id: 'dinner', label: 'Dinner Date', icon: '🍝' },
@@ -149,18 +151,36 @@ export default function Home() {
           <div className="picture-frame happy"><PixelMascot mood="yay" /></div>
           <p className="eyebrow">excellent decision</p>
           <h1 className="huge">YAY!</h1>
-          <p className="subtitle">I knew you had great taste ✨</p>
+          <p className="subtitle">I knew you had great taste ✨ But your prize has two tiny security checks.</p>
           <div className="heart-burst" aria-hidden="true">
             <span>♥</span><span>♡</span><span>♥</span><span>♡</span><span>♥</span>
           </div>
-          <Button onClick={() => setStep('date')}>CONTINUE →</Button>
+          <Button onClick={() => setStep('flappy')}>START MINI GAME →</Button>
+        </div>
+      )}
+
+      {step === 'flappy' && (
+        <div className="panel wide game-panel step-enter">
+          <p className="eyebrow">bonus game 1 of 2</p>
+          <h1 className="medium">FLAPPY HEART</h1>
+          <p className="subtitle">Deliver this tiny heart safely. Seven gates only — I promise I&apos;m not evil.</p>
+          <FlappyHeart onWin={() => setStep('scratch')} />
+        </div>
+      )}
+
+      {step === 'scratch' && (
+        <div className="panel wide game-panel step-enter">
+          <p className="eyebrow">bonus game 2 of 2</p>
+          <h1 className="medium">SECRET PRIZE</h1>
+          <p className="subtitle">You survived the heart delivery. Now scratch the card to see what you actually won.</p>
+          <ScratchCard onComplete={() => setStep('date')} />
         </div>
       )}
 
       {step === 'date' && (
         <div className="panel step-enter">
           <div className="picture-frame small"><PixelMascot mood="ask" /></div>
-          <p className="eyebrow">step 1 of 2</p>
+          <p className="eyebrow">date setup · step 1 of 2</p>
           <h1 className="medium">PICK A DATE</h1>
           <p className="subtitle">When should our tiny adventure happen?</p>
           <label className="date-box">
@@ -179,7 +199,7 @@ export default function Home() {
       {step === 'activity' && (
         <div className="panel wide step-enter">
           <div className="picture-frame small"><PixelMascot mood="ask" /></div>
-          <p className="eyebrow">step 2 of 2</p>
+          <p className="eyebrow">date setup · step 2 of 2</p>
           <h1 className="medium">WHAT WOULD YOU LIKE TO DO?</h1>
           <div className="activity-grid">
             {activities.map((item) => (
