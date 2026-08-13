@@ -1,4 +1,5 @@
 import './globals.css';
+import './games.css';
 
 export const metadata = {
   title: 'A Question for Jessica 💗',
